@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.amc.amis.ca.eh.eb.store.mapper.CrisisCtmsDscpTypBasicMapper">
+    
+    <!-- 재난대비훈련 훈련유형, 시나리오상황, 상황별행동요령 코드 사용여부 -->
+    <select id="retrieveDsstPrepDscpCdUseYn" parameterType="kr.amc.amis.ca.eh.ch.entity.CrisisCtmsScenDtlDTO" resultType="kr.amc.amis.ca.eh.ch.entity.CrisisCtmsScenDtlDTO">
+        <![CDATA[
+            SELECT /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.CrisisCtmsDscpTypBasicMapper.retrieveDsstPrepDscpCdUseYn */
+                   BHVR.DSCP_TYP_CD
+                 , BHVR.SCEN_CIRCUM_CD
+                 , CDSC.CIRCUM_BHVR_KNACK_SN
+            FROM EHEBMBHVR BHVR, EHCHDCDSC CDSC
+            ]]>
+            <where>
+                AND BHVR.CIRCUM_BHVR_KNACK_SN = CDSC.CIRCUM_BHVR_KNACK_SN
+                <if test = "searchDivNm != null and searchDivNm.equals('dscpTyp'.toString())">
+                    AND BHVR.DSCP_TYP_CD = #{searchDscpTypCd}
+                </if>
+                <if test = "searchDivNm != null and searchDivNm.equals('scen'.toString())">
+                    AND BHVR.DSCP_TYP_CD = #{searchDscpTypCd}
+                    AND BHVR.SCEN_CIRCUM_CD = #{searchScenCd}
+                </if>
+                <if test = "searchDivNm != null and searchDivNm.equals('circum'.toString())">
+                    AND BHVR.DSCP_TYP_CD            = #{searchDscpTypCd}
+                    AND BHVR.SCEN_CIRCUM_CD         = #{searchScenCd}
+                    AND CDSC.CIRCUM_BHVR_KNACK_SN   = #{searchCircumCd}
+                </if>
+            </where>
+       GROUP BY BHVR.DSCP_TYP_CD
+              , BHVR.SCEN_CIRCUM_CD
+              , CDSC.CIRCUM_BHVR_KNACK_SN
+    </select>
+    
+
+</mapper>

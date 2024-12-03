@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.amc.amis.ca.eh.eb.store.mapper.EhsManageCdBasicMapper">
+
+    <select id="retrieveEhsManageCdBasicList" parameterType="kr.amc.amis.ca.eh.eb.entity.EhsManageCdBasicDTO" resultType="kr.amc.amis.ca.eh.eb.entity.EhsManageCdBasicDTO">
+        <![CDATA[
+            SELECT /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.EhsManageCdBasicMapper.retrieveEhsManageCdBasicList */
+                   BMD.EHS_MANAGE_CD
+                 , BMD.EHS_MANAGE_CD AS PRV_EHS_MANAGE_CD
+			     , BMD.EHS_MANAGE_CD_NM
+			     , BMD.EHS_MANAGE_UPR_CD
+			     , NVL((SELECT EHS_MANAGE_CD_NM
+			              FROM EHEBMMNCD
+			             WHERE EHS_MANAGE_CD = BMD.EHS_MANAGE_UPR_CD
+			            ),BMD.EHS_MANAGE_UPR_CD) EHS_MANAGE_UPR_NM
+			     , BMD.SORT_SEQ
+			     , BMD.RMRK
+			     , BMD.USE_YN
+			     , BMD.COMN_NM
+
+			     , BMD.FRST_ADD_CD_VAL    /* 1번째추가코드값 */
+			     , BMD.FRST_ADD_CD_DESC   /* 1번째추가코드설명 */
+			     , BMD.SCON_ADD_CD_VAL    /* 2번째추가코드값 */
+			     , BMD.SCON_ADD_CD_DESC   /* 3번째추가코드설명 */
+			     , BMD.THIR_ADD_CD_VAL    /* 3번째추가코드값 */
+			     , BMD.THIR_ADD_CD_DESC   /* 3번째추가코드설명 */
+			     , BMD.FRTH_ADD_CD_VAL    /* 4번째추가코드값 */
+			     , BMD.FRTH_ADD_CD_DESC   /* 4번째추가코드설명 */
+			     , DECODE(BMD.FRST_ENTR_EMPNO, NULL, '', FN_ZZ_GET_USER_NM(BMD.FRST_ENTR_EMPNO) || '(' || BMD.FRST_ENTR_EMPNO || ')') AS FRST_ENTR_EMPNO
+			     , TO_CHAR(BMD.FRST_ENTR_DTM, 'YYYY-MM-DD HH24:MI:SS') FRST_ENTR_DT
+			     , DECODE(BMD.FINL_UPID_EMPNO, NULL, '', FN_ZZ_GET_USER_NM(BMD.FINL_UPID_EMPNO) || '(' || BMD.FINL_UPID_EMPNO || ')') AS FINL_UPID_EMPNO
+			     , TO_CHAR(BMD.FINL_UPDT_DTM, 'YYYY-MM-DD HH24:MI:SS') FINL_UPDT_DT
+
+			  FROM EHEBMMNCD BMD
+
+        ]]>
+        <where>
+	        <if test="ehsManageCd != null and ehsManageCd != ''">
+	            AND BMD.EHS_MANAGE_UPR_CD     = #{ehsManageCd, jdbcType=VARCHAR}
+	        </if>
+	        <if test="ehsManageCdNm != null and ehsManageCdNm != ''">
+	            AND BMD.EHS_MANAGE_CD_NM  LIKE '%' || #{ehsManageCdNm, jdbcType=VARCHAR} || '%'
+	        </if>
+	        <if test="useYn != null and useYn != ''">
+	            AND BMD.USE_YN            = #{useYn, jdbcType=VARCHAR}
+	        </if>
+	        <if test="ehsManageUprCd != null and ehsManageUprCd != ''">
+	            AND BMD.EHS_MANAGE_UPR_CD           = #{ehsManageUprCd, jdbcType=VARCHAR}
+	        </if>
+	        <if test="searchEhsManageCd != null and searchEhsManageCd !=''">
+	        	AND BMD.EHS_MANAGE_CD = #{searchEhsManageCd, jdbcType=VARCHAR}
+	        </if>
+	    </where>
+            <choose>
+                <when test="divNm != null and divNm == 'common'">
+                    ORDER BY SORT_SEQ
+                </when>
+                <otherwise>
+                    ORDER BY EHS_MANAGE_CD, SORT_SEQ, EHS_MANAGE_UPR_CD, EHS_MANAGE_CD_NM
+                </otherwise>
+            </choose>
+    </select>
+
+</mapper>

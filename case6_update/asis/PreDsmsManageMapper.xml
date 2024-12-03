@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper">
+
+    <select id="retrievePreDsmsManageList" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO" resultType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            SELECT /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.retrievePreDsmsManageList */
+                   MINT.NMNT_DSMS_SN                      /* 선임해임일련번호 */
+                 , MINT.SAFE_MNGR_TYP_CD                  /* 안전관리자유형코드 */
+                 , MINT.EMPNO                             /* 사번 */
+                 , FN_ZZ_GET_USER_NM(MINT.EMPNO) AS EMPNM /* 사원명 */
+                 , MINT.COMP_NM                           /* 업체명 */
+                 , MINT.TARGTER_NM                        /* 대상자성명 */
+                 , MINT.NMNT_DSMS_PROGRS_STAT_CD          /* 선임해임진행상태코드 */
+                 , MINT.NMNT_DT                           /* 선임일자 */
+                 , MINT.NMNT_CONFM_DT                     /* 선임확인일자 */
+                 , MINT.NMNT_CONFMR_NM                    /* 선임확인자명 */
+                 , MINT.NMNT_AUTH_YN                      /* 선임승인여부 */
+                 , MINT.NMNT_AUTH_DT                      /* 선임승인일자 */
+                 , MINT.NMNT_AUTH_NM                      /* 선임승인자명 */
+                 , MINT.DSMS_DT                           /* 해임일자 */
+                 , MINT.DSMS_CONFM_DT                     /* 해임확인일자 */
+                 , MINT.DSMS_CONFMR_NM                    /* 해임확인자명 */
+                 , MINT.DSMS_AUTH_YN                      /* 해임승인여부 */
+                 , MINT.DSMS_AUTH_DT                      /* 해임승인일자 */
+                 , MINT.DSMS_AUTH_NM                      /* 해임승인자명 */
+				 , (SELECT MAX(ALEM.RGNO) FROM V_HRPOMALEM ALEM WHERE ALEM.EMPNO = MUSER.USR_ID) AS RGNO	/* 주민번호 */
+                 , MINT.QLCR_NO                           /* 자격증번호 */
+                 , MINT.QLCR_VLPR_DT                      /* 자격증유효기간일자 */
+                 , MINT.NMNT_CHRG_TYP_CD                  /* 선임담당코드 */
+                 , MINT.RMRK                              /* 특기사항 */
+                 , MINT.ACT_BASIS_CNTE                    /* 법률근거내용 */
+                 , MINT.REL_INSTT_NM                      /* 관련기관명 */
+                 , MUSER.BLNG_DEPT_CD
+                 , MUSER.BLNG_DEPT_NM
+                 , MUSER.BLNG_UNIT_CD
+                 , MUSER.BLNG_UNIT_NM
+                 , CASE WHEN MUSER.LOGIN_USR_TYP_CD = 'E'  THEN 'A311'
+                        WHEN MUSER.LOGIN_USR_TYP_CD = 'U'  THEN 'A312'
+                        ELSE '전체'
+                   END AS LOGIN_USR_TYP_CD      /*   분류대상 */
+                 , (SELECT
+                           BSSB.DTL_CD_NM
+                      FROM HRPOREMLC EMLC
+                         , ZZCBCBSSB BSSB
+                     WHERE ERP_MAIN_CD IN ('H031')
+                       AND EMLC.QUAFI_LICNS_CD = BSSB.ERP_DTL_CD
+                       AND QUAFI_LICNS_NO = MINT.QLCR_NO
+                       AND EMLC.EMPNO = MINT.EMPNO
+                       AND ROWNUM = 1) AS QLCR_NM /* 자격증명 */
+                 , (SELECT EMLC.ISSU_INSTT_NM 
+                      FROM HRPOREMLC EMLC
+                     WHERE EMLC.QUAFI_LICNS_NO = MINT.QLCR_NO
+                       AND EMLC.EMPNO = MINT.EMPNO
+                       AND ROWNUM = 1) AS ISSU_INSTT_NM /* 발급기관명 */
+                 , (SELECT EMLC.ACQS_DT 
+                      FROM HRPOREMLC EMLC
+                     WHERE EMLC.QUAFI_LICNS_NO = MINT.QLCR_NO
+                       AND EMLC.EMPNO = MINT.EMPNO
+                       AND ROWNUM = 1) AS ACQS_DT /* 취득일자 */
+                 , MINT.FRST_ENTR_EMPNO
+                 , DECODE(MINT.FRST_ENTR_EMPNO, NULL, '', FN_ZZ_GET_USER_NM(MINT.FRST_ENTR_EMPNO) || '(' || MINT.FRST_ENTR_EMPNO || ')') AS FRST_ENTR_EMPNM
+                 , MINT.FRST_ENTR_DTM
+                 , DECODE(MINT.FINL_UPID_EMPNO, NULL, '', FN_ZZ_GET_USER_NM(MINT.FINL_UPID_EMPNO) || '(' || MINT.FINL_UPID_EMPNO || ')') AS FINL_UPID_EMPNO
+                 , MINT.FINL_UPDT_DTM
+              FROM EHEBRNMNT MINT
+                 , V_ZZANMUSER MUSER
+          ]]>
+             WHERE MINT.EMPNO = MUSER.USR_ID(+)
+          <if test="safeMngrTypCd != null and safeMngrTypCd != ''">
+               AND MINT.SAFE_MNGR_TYP_CD = #{safeMngrTypCd}
+          </if>
+          <if test="empno != null and empno != ''">
+               AND MINT.EMPNO            = #{empno}
+          </if>
+          <if test="nmntStDt != null and nmntStDt != '' and nmntEndDt != null and nmntEndDt != ''">
+               AND MINT.NMNT_DT             BETWEEN #{nmntStDt} AND #{nmntEndDt}
+          </if>
+          <if test="dsmsStDt != null and dsmsStDt != '' and dsmsEndDt != null and dsmsEndDt != ''">
+               AND MINT.DSMS_DT             BETWEEN #{dsmsStDt} AND #{dsmsEndDt}
+          </if>
+          <if test="dsmsDt != null and dsmsDt != ''">
+               AND MINT.DSMS_DT          = #{dsmsDt}
+          </if>
+          <if test="nmntAuthYn != null and nmntAuthYn != ''">
+               AND MINT.NMNT_AUTH_YN     = #{nmntAuthYn}
+          </if>
+          <if test="nmntAuthDt != null and nmntAuthDt != ''">
+               AND MINT.NMNT_AUTH_DT     = #{nmntAuthDt}
+          </if>
+          <if test="dsmsAuthYn != null and dsmsAuthYn != ''">
+               AND MINT.DSMS_AUTH_YN     = #{dsmsAuthYn}
+          </if>
+          <if test="dsmsAuthDt != null and dsmsAuthDt != ''">
+               AND MINT.DSMS_AUTH_DT     = #{dsmsAuthDt}
+          </if>
+          <if test="qlcrNo != null and qlcrNo != ''">
+               AND MINT.QLCR_NO          = #{qlcrNo}
+          </if>
+          <if test="qlcrVlprDt != null and qlcrVlprDt != ''">
+               AND MINT.QLCR_VLPR_DT     = #{qlcrVlprDt}
+          </if>
+          <if test="nmntChrgTypCd != null and nmntChrgTypCd != ''">
+               AND MINT.NMNT_CHRG_TYP_CD = #{nmntChrgTypCd}
+          </if>
+          <if test="deptCd != null and deptCd != ''">
+               AND MUSER.BLNG_DEPT_CD    = #{deptCd}
+          </if>
+          <if test="unitCd != null and unitCd != ''">
+               AND MUSER.BLNG_UNIT_CD    = #{unitCd}
+          </if>
+          <if test="nmntDsmsProgrsStatCd != null and nmntDsmsProgrsStatCd != ''">
+               AND MINT.NMNT_DSMS_PROGRS_STAT_CD    = #{nmntDsmsProgrsStatCd}
+          </if>
+              ORDER BY MINT.FINL_UPDT_DTM DESC
+    </select>
+
+    <!-- 자격면허 정보 조회 (2017-06-02) - 자격선해임관리 -->
+    <select id="retrieveQuafiInfo" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO" resultType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            SELECT /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.retrieveQuafiInfo */
+                   MUSER.USR_ID AS EMPNO
+                 , FN_ZZ_GET_USER_NM(MUSER.USR_ID) AS EMPNM
+                 , EMLC.SN
+                 , EMLC.QUAFI_LICNS_CD
+                 , EMLC.QUAFI_LICNS_NO
+                 , EMLC.QUAFI_SCHM_BRKDWN
+                 , EMLC.ACQS_DT
+                 , EMLC.ISSU_INSTT_NM
+                 , EMLC.MDEX_USE_LICNS_YN
+                 , EMLC.LICNS_CLSF_CD
+                 , (SELECT MAX(BSSB.DTL_CD_NM) FROM ZZCBCBSSB BSSB WHERE BSSB.ERP_DTL_CD = EMLC.QUAFI_LICNS_CD AND BSSB.ERP_MAIN_CD IN ('H031')) AS DTL_CD_NM
+                 , MUSER.BLNG_DEPT_CD
+                 , MUSER.BLNG_DEPT_NM
+                 , MUSER.BLNG_UNIT_CD
+                 , MUSER.BLNG_UNIT_NM
+                 , (SELECT MAX(ALEM.RGNO) FROM V_HRPOMALEM ALEM WHERE ALEM.EMPNO = MUSER.USR_ID) AS RGNO	/* 주민번호 */
+                 , ' '                           AS ACTCUST_NM    /* 거래처명 */
+                 , CASE WHEN MUSER.LOGIN_USR_TYP_CD = 'E'  THEN '고용'
+                        WHEN MUSER.LOGIN_USR_TYP_CD = 'U'  THEN '비고용'
+                        ELSE ' '
+                   END AS LOGIN_USR_TYP_CD      /*   분류대상 */
+                 , DECODE(EMLC.FRST_ENTR_EMPNO, NULL, '', FN_ZZ_GET_USER_NM(EMLC.FRST_ENTR_EMPNO) || '(' || EMLC.FRST_ENTR_EMPNO || ')') AS FRST_ENTR_EMPNM
+                 , EMLC.FRST_ENTR_DTM
+                 , DECODE(EMLC.FINL_UPID_EMPNO, NULL, '', FN_ZZ_GET_USER_NM(EMLC.FINL_UPID_EMPNO) || '(' || EMLC.FINL_UPID_EMPNO || ')') AS FINL_UPID_EMPNO
+                 , EMLC.FINL_UPDT_DTM
+             FROM V_ZZANMUSER MUSER
+                 , HRPOREMLC EMLC
+             WHERE MUSER.USR_ID = EMLC.EMPNO(+)
+               AND MUSER.HLOG_DIV_CD  = 'L001'  /* 재직 = L001, 사직  = L002 , 휴직  = L003, 연수  = L004, 파견  = L005 */
+               AND MUSER.USE_YN  = 'Y'
+        ]]>
+        <if test="empno != null and empno != ''">
+			<![CDATA[ AND MUSER.USR_ID = #{empno}               /* 사번 조회 조건 */ ]]>
+        </if>
+        <if test="qlcrNm != null and qlcrNm != ''">
+            <![CDATA[ AND EMLC.QUAFI_LICNS_CD IN (SELECT ERP_DTL_CD FROM ZZCBCBSSB BSSB WHERE BSSB.ERP_DTL_CD = EMLC.QUAFI_LICNS_CD AND BSSB.ERP_MAIN_CD IN ('H031') AND BSSB.DTL_CD_NM LIKE '%' || #{qlcrNm} || '%') /* 자격증명 조회 조건 */ ]]>
+        </if>
+        <if test="blngDeptCd != null and blngDeptCd != ''">
+            <![CDATA[ AND MUSER.BLNG_DEPT_CD = #{blngDeptCd}  /* 부서 조회조건  */]]>
+        </if>
+        <if test="preDsmsTrgetClsf != null and preDsmsTrgetClsf != ''">
+            <![CDATA[ AND MUSER.LOGIN_USR_TYP_CD = #{preDsmsTrgetClsf}  /* 분류대상  */]]>
+        </if>
+        <![CDATA[  ORDER BY MUSER.BLNG_DEPT_CD, MUSER.BLNG_UNIT_CD, MUSER.USR_ID, EMLC.SN ]]>
+    </select>
+
+    <!-- 보수교육내역조회 (2017-06-02) - 자격선해임관리 -->
+    <select id="retrieveCneduBrkdwn" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO" resultType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            SELECT /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.retrieveCneduBrkdwn */
+                            HRM.EMPNO        -- 사번
+                          , HRM.KOR_NM       -- 성명
+                          , CLS.CNEDU_KND_CD -- 보수교육코드
+                          , FN_ZZ_GET_CD_NM('EM0062', CLS.CNEDU_KND_CD) AS CNEDU_KND_NM -- 구분(보수교육코드명)
+                          , COS.SBJT_NM      -- 학회명(교육과목명)
+                          , CLS.EDU_ST_DT    -- 시작일자
+                          , CLS.EDU_END_DT   -- 종료일자
+                          , HRM.BLNG_DEPT_CD
+                          , HRM.BLNG_UNIT_CD
+
+                          , CLS.EDU_YEAR -- 교육년도
+                          , CLS.TURNO    -- 차수
+                          , CLS.TURNO_NM -- 차수명
+
+                          , APL.FINISH_YN -- 수료여부
+                          , CLS.INHOSP_EDU_EXPN -- 원내교욱비
+                          , CLS.DTL_LOC_NM -- 세부장소명
+
+                       FROM EMGEMEDSB COS        -- 교육과목기본
+                          , EMGEDEDSB CLS        -- 차수
+                          , EMGEMEDTE APL        -- 원내교육수강생기본
+                          , V_HRPOHEMMS_EMII HRM -- 인사정보 VIEW
+                      WHERE 1=1
+                        -- join
+                        AND COS.EDU_SBJT_CD = CLS.EDU_SBJT_CD
+                        AND CLS.EDU_SBJT_CD = APL.EDU_SBJT_CD
+                        AND CLS.EDU_YEAR    = APL.EDU_YEAR
+                        AND CLS.TURNO       = APL.TURNO
+                        AND APL.TRN_NO      = HRM.EMPNO
+                     -- AND COS.ESEN_YN     = 'Y'
+                     -- AND CLS.CNEDU_KND_CD is NOT NULL -- 보수교육코드 EM0062 01:간호보수교육 , 02:의사보수교육  03:기능직보수교육
+        ]]>
+        <if test="empno != null and empno != ''">
+                        AND HRM.EMPNO = #{empno}
+        </if>
+                   ORDER BY CLS.EDU_YEAR DESC, CLS.TURNO ASC
+
+
+    </select>
+
+
+    <!-- 선해임 등록 -->
+    <insert id="registerPreDsmsManage" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <selectKey keyProperty="nmntDsmsSn" order="BEFORE" resultType="String">
+            SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || LPAD(NVL(SUBSTR(MAX(THIS.NMNT_DSMS_SN), 9, 4) + 1, 1), 4, '0')
+              FROM EHEBRNMNT THIS
+             WHERE THIS.NMNT_DSMS_SN LIKE TO_CHAR(SYSDATE, 'YYYYMMDD') || '%'
+        </selectKey>
+        <![CDATA[
+            INSERT /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.registerPreDsmsManage */
+              INTO EHEBRNMNT
+            (
+              NMNT_DSMS_SN      /* 선임해임일련번호 */
+            , SAFE_MNGR_TYP_CD  /* 안전관리자유형코드 */
+            , EMPNO             /* 사번 */
+            , COMP_NM           /* 협력업체명 */
+
+            , NMNT_DT           /* 선임일자 */
+            , DSMS_DT           /* 해임일자 */
+            , NMNT_AUTH_YN      /* 선임승인여부 */
+            , NMNT_AUTH_DT      /* 선임승인일자 */
+            , DSMS_AUTH_YN      /* 해임승인여부 */
+            , DSMS_AUTH_DT      /* 해임승인일자 */
+
+            , QLCR_NO           /* 자격증번호 */
+            , QLCR_VLPR_DT      /* 자격증유효기간일자 */
+            , NMNT_CHRG_TYP_CD  /* 선임담당유형코드 */
+            , RMRK              /* 특기사항 */
+
+            , NMNT_DSMS_PROGRS_STAT_CD /* 선임해임진행상태코드 */
+            , ACT_BASIS_CNTE           /* 법률근거내용 */
+            , REL_INSTT_NM             /* 관련기관명 */
+
+            , FRST_ENTR_EMPNO   /* 최초입력자사번 */
+            , FRST_ENTR_DTM     /* 최초입력일시 */
+            , FINL_UPID_EMPNO   /* 최종수정자사번 */
+            , FINL_UPDT_DTM     /* 최종수정일시 */
+            )
+            VALUES
+            (
+              #{nmntDsmsSn}
+            , #{safeMngrTypCd}
+            , #{empno}
+            , #{compNm}
+
+            , #{nmntDt}
+            , #{dsmsDt, jdbcType=VARCHAR}
+            , 'N'
+            , #{nmntAuthDt, jdbcType=VARCHAR}
+            , 'N'
+            , #{dsmsAuthDt, jdbcType=VARCHAR}
+
+            , #{qlcrNo, jdbcType=VARCHAR}
+            , #{qlcrVlprDt, jdbcType=VARCHAR}
+            , #{nmntChrgTypCd, jdbcType=VARCHAR}
+            , #{rmrk, jdbcType=VARCHAR}
+
+            , #{nmntDsmsProgrsStatCd, jdbcType=VARCHAR}
+            , #{actBasisCnte, jdbcType=VARCHAR}
+            , #{relInsttNm, jdbcType=VARCHAR}
+
+            , #{frstEntrEmpno}
+            , SYSDATE
+            , #{finlUpidEmpno}
+            , SYSDATE
+            )
+        ]]>
+    </insert>
+
+    <!-- 선해임 수정 -->
+    <update id="updatePreDsmsManage" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            UPDATE /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.updatePreDsmsManage */
+                   EHEBRNMNT MINT
+               SET
+                   MINT.EMPNO            = #{empno}
+                 , MINT.COMP_NM          = #{compNm, jdbcType=VARCHAR}
+                 , MINT.NMNT_DT          = #{nmntDt}
+                 , MINT.DSMS_DT          = #{dsmsDt, jdbcType=VARCHAR}
+
+                 , MINT.QLCR_NO          = #{qlcrNo, jdbcType=VARCHAR}
+                 , MINT.QLCR_VLPR_DT     = #{qlcrVlprDt, jdbcType=VARCHAR}
+                 , MINT.NMNT_CHRG_TYP_CD = #{nmntChrgTypCd, jdbcType=VARCHAR}
+                 , MINT.NMNT_DSMS_PROGRS_STAT_CD = #{nmntDsmsProgrsStatCd}  /* 선임해임진행상태코드 - 접수 */
+                 , MINT.RMRK             = #{rmrk, jdbcType=VARCHAR}
+                 , MINT.ACT_BASIS_CNTE   = #{actBasisCnte, jdbcType=VARCHAR}
+                 , MINT.REL_INSTT_NM     = #{relInsttNm, jdbcType=VARCHAR}
+        ]]>
+        <if test="nmntDsmsProgrsStatCd eq 'A324'.toString()"> -- 선임(반려)에서 저장했을 경우
+                 , MINT.NMNT_CONFM_DT    = null
+                 , MINT.NMNT_CONFMR_NM   = null
+
+        </if>
+        <if test="nmntDsmsProgrsStatCd eq 'A328'.toString()"> -- 해임(반려)에서 저장했을 경우
+                 , MINT.DSMS_CONFM_DT    = null
+                 , MINT.DSMS_CONFMR_NM   = null
+
+        </if>
+        <![CDATA[
+
+                 , MINT.FINL_UPID_EMPNO  = #{finlUpidEmpno}
+                 , MINT.FINL_UPDT_DTM    = SYSDATE
+
+             WHERE MINT.NMNT_DSMS_SN     = #{nmntDsmsSn}
+        ]]>
+
+    </update>
+
+    <!-- 선해임 삭제 -->
+    <delete id="deletePreDsmsManage" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            DELETE /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.deletePreDsmsManage*/
+              FROM EHEBRNMNT MINT
+             WHERE MINT.NMNT_DSMS_SN = #{nmntDsmsSn}
+
+        ]]>
+    </delete>
+
+    <!-- 선임/해임 결재요청('작성중'->'결재중') 2017-11-06 -->
+    <update id="updateAprval" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            UPDATE /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.updateAprval */
+                   EHEBRNMNT MINT
+               SET
+                   /* 선임해임진행상태코드 - 결재중('H212'), 재요청('H216') */
+                   MINT.NMNT_DSMS_PROGRS_STAT_CD = #{nmntDsmsProgrsStatCd}
+
+                 , MINT.FINL_UPID_EMPNO  = #{finlUpidEmpno}
+                 , MINT.FINL_UPDT_DTM    = SYSDATE
+
+             WHERE MINT.NMNT_DSMS_SN     = #{nmntDsmsSn}
+        ]]>
+    </update>
+
+    <!-- 선임 확인('결재중'->'확인') 2017-06-05 -->
+    <update id="updateNmntConfm" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            UPDATE /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.updateNmntConfm */
+                   EHEBRNMNT MINT
+               SET
+                   MINT.NMNT_CONFM_DT            = #{nmntConfmDt}  /* 선임확인일자 */
+                 , MINT.NMNT_CONFMR_NM           = #{nmntConfmrNm} /* 선임확인자성명 */
+                   /* 선임해임진행상태코드 - 확인 ('H213') */
+                 , MINT.NMNT_DSMS_PROGRS_STAT_CD = #{nmntDsmsProgrsStatCd}
+
+                 , MINT.FINL_UPID_EMPNO  = #{finlUpidEmpno}
+                 , MINT.FINL_UPDT_DTM    = SYSDATE
+
+             WHERE MINT.NMNT_DSMS_SN     = #{nmntDsmsSn}
+        ]]>
+    </update>
+
+    <!-- 선임 승인('확인'->'승인') 2017-06-05 -->
+    <update id="updateNmntAuth" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            UPDATE /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.updateNmntAuth */
+                EHEBRNMNT MINT
+               SET MINT.NMNT_AUTH_DT             = #{nmntAuthDt}  /* 선임승인일자 */
+                 , MINT.NMNT_AUTH_NM             = #{nmntAuthNm}  /* 선임승인자성명 */
+                 , MINT.NMNT_AUTH_YN             = #{nmntAuthYn}  /* 선임승인여부 */
+                   /* 선임해임진행상태코드 - 승인 ('H214') */
+                 , MINT.NMNT_DSMS_PROGRS_STAT_CD = #{nmntDsmsProgrsStatCd}
+
+                 , MINT.FINL_UPID_EMPNO  = #{finlUpidEmpno}
+                 , MINT.FINL_UPDT_DTM    = SYSDATE
+
+             WHERE MINT.NMNT_DSMS_SN = #{nmntDsmsSn}
+        ]]>
+    </update>
+
+    <!-- 선임 반려('확인'->'반려') 2017-06-07 -->
+    <update id="updateNmntGivback" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            UPDATE /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.updateNmntGivback */
+                EHEBRNMNT MINT
+
+               SET MINT.NMNT_AUTH_YN             = #{nmntAuthYn}  /* 선임승인여부 */
+                   /* 선임해임진행상태코드 - 반려('H215') */
+                 , MINT.NMNT_DSMS_PROGRS_STAT_CD = #{nmntDsmsProgrsStatCd}
+
+                 , MINT.FINL_UPID_EMPNO  = #{finlUpidEmpno}
+                 , MINT.FINL_UPDT_DTM    = SYSDATE
+
+             WHERE MINT.NMNT_DSMS_SN = #{nmntDsmsSn}
+        ]]>
+    </update>
+
+    <!-- 해임 확인('결재중'->'확인') 2017-06-07 -->
+    <update id="updateDsmsConfm" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            UPDATE /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.updateDsmsConfm */
+                EHEBRNMNT MINT
+               SET MINT.DSMS_CONFM_DT            = #{dsmsConfmDt}  /* 해임확인일자 */
+                 , MINT.DSMS_CONFMR_NM           = #{dsmsConfmrNm} /* 해임확인자성명 */
+                   /* 선임해임진행상태코드 - 확인('H213') */
+                 , MINT.NMNT_DSMS_PROGRS_STAT_CD = #{nmntDsmsProgrsStatCd}
+
+                 , MINT.FINL_UPID_EMPNO  = #{finlUpidEmpno}
+                 , MINT.FINL_UPDT_DTM    = SYSDATE
+
+             WHERE MINT.NMNT_DSMS_SN = #{nmntDsmsSn}
+        ]]>
+    </update>
+
+    <!-- 해임 승인('확인'->'승인') 2017-06-07 -->
+    <update id="updateDsmsAuth" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            UPDATE /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.updateDsmsAuth */
+                EHEBRNMNT MINT
+               SET MINT.DSMS_AUTH_DT             = #{dsmsAuthDt}  /* 해임승인일자 */
+                 , MINT.DSMS_AUTH_NM             = #{dsmsAuthNm}  /* 해임승인자성명 */
+                 , MINT.DSMS_AUTH_YN             = #{dsmsAuthYn}  /* 해임승인여부 */
+                   /* 선임해임진행상태코드 - 승인('H214')*/
+                 , MINT.NMNT_DSMS_PROGRS_STAT_CD = #{nmntDsmsProgrsStatCd}
+
+                 , MINT.FINL_UPID_EMPNO  = #{finlUpidEmpno}
+                 , MINT.FINL_UPDT_DTM    = SYSDATE
+
+             WHERE MINT.NMNT_DSMS_SN = #{nmntDsmsSn}
+        ]]>
+    </update>
+
+    <!-- 해임 반려('확인'->'반려') 2017-06-07 -->
+    <update id="updateDsmsGivback" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            UPDATE /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.updateDsmsGivback */
+                EHEBRNMNT MINT
+
+               SET MINT.DSMS_AUTH_YN             = #{dsmsAuthYn}  /* 해임승인여부 */
+                   /* 선임해임진행상태코드 - 반려('H215') */
+                 , MINT.NMNT_DSMS_PROGRS_STAT_CD = #{nmntDsmsProgrsStatCd}
+
+                 , MINT.FINL_UPID_EMPNO  = #{finlUpidEmpno}
+                 , MINT.FINL_UPDT_DTM    = SYSDATE
+
+             WHERE MINT.NMNT_DSMS_SN = #{nmntDsmsSn}
+        ]]>
+    </update>
+
+    <!-- 해임 신청('승인'->'작성중') 2017-06-07 [삭제여부 고려해바야함]-->
+    <update id="updateDsms" parameterType="kr.amc.amis.ca.eh.eb.entity.PreDsmsManageDTO">
+        <![CDATA[
+            UPDATE /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.PreDsmsManageMapper.updateDsms */
+                EHEBRNMNT MINT
+
+               SET MINT.DSMS_DT                  = #{dsmsDt}
+                   /* 선임해임진행상태코드('H211') - 작성중 */
+                 , MINT.NMNT_DSMS_PROGRS_STAT_CD = #{nmntDsmsProgrsStatCd}
+
+                 , MINT.FINL_UPID_EMPNO  = #{finlUpidEmpno}
+                 , MINT.FINL_UPDT_DTM    = SYSDATE
+
+             WHERE MINT.NMNT_DSMS_SN = #{nmntDsmsSn}
+        ]]>
+    </update>
+
+</mapper>

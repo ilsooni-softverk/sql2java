@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.amc.amis.ca.eh.sh.store.mapper.BlodInfectionAccidMapper">
+    
+    <!-- 혈액외노출사고 등록 및 수정 -->
+    <update id="mergeBlodInfectionAccid" parameterType="kr.amc.amis.ca.eh.sh.entity.BlodInfectionDTO">
+         <![CDATA[
+             MERGE /* SQLID=kr.amc.amis.ca.eh.sh.store.mapper.BlodInfectionAccidMapper.mergeBlodInfectionAccid */
+              INTO EHSHRBARR
+            USING DUAL
+                  ON( ACCID_DCLAR_NO = #{accidDclarNo}
+                  AND ACCID_DCLAR_RCEP_DIV_CD = #{accidDclarRcepDivCd}
+                  )
+
+             WHEN MATCHED THEN
+                  UPDATE
+                     SET
+                          ACCID_NM = NVL( #{accidNm} , ACCID_NM)
+                        , ACCID_OCCUR_DTM = TO_DATE(#{accidOccurDtm}, 'YYYY-MM-DD HH24:MI')
+                        , BLOD_EXPO_ACCID_LOC_USE_CD = #{blodExpoAccidLocUseCd}
+                        , BLOD_EXPO_ACCID_SITE_CD = #{blodExpoAccidSiteCd}
+                        , BLOD_EXPO_ACCID_TYP_CD = #{blodExpoAccidTypCd}
+                        , BLOD_EXPO_ACCID_CRCS_CD = #{blodExpoAccidCrcsCd}
+                        , EMP_EXPO_CRCS_RSN = #{empExpoCrcsRsn}
+                        , ACCID_DAMG_DGREE_CD = #{accidDamgDgreeCd}
+                        , EXPO_USE_UTENSL_CD = #{expoUseUtenslCd}
+                        , CSBD_INFO_PA = #{csbdInfoPa}
+                        , CSBD_NM = #{csbdNm}
+                        , PATNO = #{patno}
+                        , CSBD_SEX_CD = #{csbdSexCd}
+                        , CSBD_AGE = #{csbdAge, jdbcType=NUMERIC}
+                        , CSBD_MDDP_CD = #{csbdMddpCd}
+                        , CSBD_WARD_CD = #{csbdWardCd}
+                        , CSBD_DIAG_NM = #{csbdDiagNm}
+                        , EXAM_TKACT_NEED_YN = NVL(#{examTkactNeedYn, jdbcType=VARCHAR}, 'N')
+                        , MDCT_NEED_YN = NVL(#{mdctNeedYn, jdbcType=VARCHAR}, 'N')
+                        , LTR_TKACT_NEED_YN = NVL(#{ltrTkactNeedYn, jdbcType=VARCHAR}, 'N')
+                        , TKACT_FINSH_YN = NVL(#{tkactFinshYn, jdbcType=VARCHAR}, 'N')
+                        , RMRK = #{rmrk, jdbcType=VARCHAR}
+                        , FINL_UPID_EMPNO = #{finlUpidEmpno}
+                        , FINL_UPDT_DTM = SYSDATE
+                        
+                        , TKACT_LOC_CD = #{tkactLocCd, jdbcType=VARCHAR}
+                        , TKACT_FINSH_DTM = TO_DATE(#{tkactFinshDtm, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI')
+                        , TKACT_FINSH_EMPNO = #{tkactFinshEmpno, jdbcType=VARCHAR}
+                        , OPAD_MDEX_YN = NVL(#{opadMdexYn, jdbcType=VARCHAR}, 'N')
+                        
+                        , HIV_EXPO_YN = NVL(#{hivExpoYn, jdbcType=VARCHAR}, 'N')                                                 --HIV노출여부
+                        , SYPH_EXPO_YN = NVL(#{syphExpoYn, jdbcType=VARCHAR}, 'N')                                                --매독노출여부
+                        , ETC_DSS_EXPO_YN = NVL(#{etcDssExpoYn, jdbcType=VARCHAR}, 'N')                                             --기타질환노출여부
+                        , ETC_DSS_EXPO_CNTE = NVL(#{etcDssExpoCnte, jdbcType=VARCHAR}, ' ')                                     --기타질환노출내용
+             WHEN NOT MATCHED THEN
+                  INSERT
+                  (
+                    ACCID_DCLAR_NO                      --      사고신고번호
+                  , ACCID_DCLAR_RCEP_DIV_CD             --      사고신고접수구분코드
+                  , ACCID_NM                            --      사고명
+                  , ACCID_OCCUR_DTM                     --      사고발생일시
+                  , BLOD_EXPO_ACCID_LOC_USE_CD          --      혈액노출사고장소사용코드
+                  , BLOD_EXPO_ACCID_SITE_CD             --      혈액노출사고부위코드
+                  , BLOD_EXPO_ACCID_TYP_CD              --      혈액노출사고유형코드
+                  , BLOD_EXPO_ACCID_CRCS_CD             --      혈액노출사고경위코드
+                  , EMP_EXPO_CRCS_RSN                   --      직원노출경위사유
+                  , ACCID_DAMG_DGREE_CD                 --      사고손상정도코드
+                  , EXPO_USE_UTENSL_CD                  --      노출사용기구코드
+                  , CSBD_INFO_PA                        --      원인체정보유무
+                  , CSBD_NM                             --      원인체명
+                  , PATNO                               --      병원등록번호
+                  , CSBD_SEX_CD                         --      원인체성별코드
+                  , CSBD_AGE                            --      원인체나이
+                  , CSBD_MDDP_CD                        --      원인체진료과코드
+                  , CSBD_WARD_CD                        --      원인체병동코드
+                  , CSBD_DIAG_NM
+                  , EXAM_TKACT_NEED_YN                  --      검사조치필요여부
+                  , MDCT_NEED_YN                        --      투약필요여부
+                  , LTR_TKACT_NEED_YN                   --      추후조치필요여부
+                  , TKACT_FINSH_YN                      --      조치완료여부
+                  , RMRK                                --      특기사항
+                  
+                  , TKACT_LOC_CD                        --      조치장소코드
+                  , TKACT_FINSH_DTM                     --      조치일시
+                  , TKACT_FINSH_EMPNO                   --      조치자사번
+                  , OPAD_MDEX_YN                        --      외래진료여부
+                  
+                  , HIV_EXPO_YN                         --      HIV노출여부
+                  , SYPH_EXPO_YN                        --      매독노출여부
+                  , ETC_DSS_EXPO_YN                     --      기타질환노출여부
+                  , ETC_DSS_EXPO_CNTE                   --      기타질환노출내용
+                  
+                  , FRST_ENTR_EMPNO                     --      최초입력자사번
+                  , FRST_ENTR_DTM                       --      최초입력일시
+                  , FINL_UPID_EMPNO                     --      최종수정자사번
+                  , FINL_UPDT_DTM                       --      최종수정일시
+                  )
+                  VALUES
+                  (
+                    #{accidDclarNo}                            --  사고신고번호
+                  , #{accidDclarRcepDivCd}                     --  사고신고접수구분코드
+                  , #{accidNm}                                 --  사고명
+                  , TO_DATE(#{accidOccurDtm}, 'YYYY-MM-DD HH24:MI') --  사고발생일시
+                  , #{blodExpoAccidLocUseCd}                   --  혈액노출사고장소사용코드
+                  , #{blodExpoAccidSiteCd        , jdbcType=VARCHAR}  --  혈액노출사고부위코드
+                  , #{blodExpoAccidTypCd         , jdbcType=VARCHAR}  --  혈액노출사고유형코드
+                  , #{blodExpoAccidCrcsCd        , jdbcType=VARCHAR}  --  혈액노출사고경위코드
+                  , #{empExpoCrcsRsn              , jdbcType=VARCHAR}  --  직원노출경위사유
+                  , #{accidDamgDgreeCd            , jdbcType=VARCHAR}  --  사고손상정도코드
+                  , #{expoUseUtenslCd             , jdbcType=VARCHAR}  --  노출사용기구코드
+                  , #{csbdInfoPa}                              --  원인체정보유무
+                  , #{csbdNm                        , jdbcType=VARCHAR}  --  원인체명
+                  , #{patno                          , jdbcType=VARCHAR}  --  병원등록번호
+                  , #{csbdSexCd                    , jdbcType=VARCHAR}  --  원인체성별코드
+                  , #{csbdAge                       , jdbcType=NUMERIC}  --  원인체나이
+                  , #{csbdMddpCd                   , jdbcType=VARCHAR}  --  원인체진료과코드
+                  , #{csbdWardCd                   , jdbcType=VARCHAR}  --  원인체병동코드
+                  , #{csbdDiagNm                    , jdbcType=VARCHAR}
+                  , NVL(#{examTkactNeedYn, jdbcType=VARCHAR}, 'N')                         --  검사조치필요여부
+                  , NVL(#{mdctNeedYn, jdbcType=VARCHAR}, 'N')                              --  투약필요여부
+                  , NVL(#{ltrTkactNeedYn, jdbcType=VARCHAR}, 'N')                          --  추후조치필요여부
+                  , NVL(#{tkactFinshYn, jdbcType=VARCHAR}, 'N')                            --  조치완료여부
+                  , #{rmrk                           , jdbcType=VARCHAR}  --  특기사항
+                  
+                  , #{tkactLocCd, jdbcType=VARCHAR}                                     --  조치완료장소
+                  , TO_DATE(#{tkactFinshDtm, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI')   --  조치완료일시
+                  , #{tkactFinshEmpno, jdbcType=VARCHAR}                                --  조치완료자사번
+                  , NVL(#{opadMdexYn, jdbcType=VARCHAR}, 'N')                           --  외래진료여부
+                  
+                  , NVL(#{hivExpoYn, jdbcType=VARCHAR}, 'N')
+                  , NVL(#{syphExpoYn, jdbcType=VARCHAR}, 'N')
+                  , NVL(#{etcDssExpoYn, jdbcType=VARCHAR}, 'N')
+                  , NVL(#{etcDssExpoCnte, jdbcType=VARCHAR}, ' ')
+                  
+                  , #{frstEntrEmpno}
+                  , SYSDATE
+                  , #{finlUpidEmpno}
+                  , SYSDATE
+                  )
+        ]]>
+    </update>
+
+</mapper>

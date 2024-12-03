@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.amc.amis.ca.eh.ch.store.mapper.DscpDirBrkdwnMapper">
+
+    <!-- 위기대응훈련 통계분석 요약 목록조회 -->
+    <select id="retrieveCrisisCtmsDscpSmryStatAnly" parameterType="kr.amc.amis.ca.eh.ch.entity.CrisisCtmsDscpStatAnlyDTO" resultType="kr.amc.amis.ca.eh.ch.entity.CrisisCtmsDscpStatAnlyDTO">
+    <![CDATA[
+        SELECT /* SQLID=kr.amc.amis.ca.eh.ch.store.mapper.DscpDirBrkdwnMapper.retrieveCrisisCtmsDscpSmryStatAnly */
+               FIR.EHS_PLAN_MANAGE_SN
+             , FIR.EHS_DTL_PLAN_MANAGE_SN
+             , FIR.DSCP_YEAR
+             , FIR.TOTAL_SOCR
+             , FIR.EHS_DTL_PLAN_MANAGE_NM
+             , FIR.CHRG_DEPT_CD
+             , FIR.CHRG_DEPT_NM
+             , FIR.PLAN_DT
+             , FIR.DSCP_TYP_CD
+             , FIR.DSCP_TYP_NM
+             , FIR.DSCP_IMPV_YN
+             , FIR.MANAGE_DEPT_CD
+             , FIR.MANAGE_DEPT_NM
+             , FIR.MANAGE_UNIT_CD
+             , FIR.MANAGE_UNIT_NM
+             , FIR.ONST_EMRCY_TKACT_HANDL_STAT_CD
+             , FIR.ONST_EMRCY_TKACT_HANDL_STAT_NM
+             , FIR.NEED_TOOL_CNVY_HANDL_STAT_CD
+             , FIR.NEED_TOOL_CNVY_HANDL_STAT_NM
+             , FIR.HARM_RGN_EMRCY_HANDL_STAT_CD
+             , FIR.HARM_RGN_EMRCY_HANDL_STAT_NM
+             , FIR.ONST_ARNG_HANDL_STAT_CD
+             , FIR.ONST_ARNG_HANDL_STAT_NM
+             , SND.DSCP_YEAR
+             , SND.S_SUM
+             , SND.AVR_TOTAL_SOCR
+             , SND.CNT
+          FROM (
+                SELECT EHPL.EHS_PLAN_MANAGE_SN
+                     , EHPL.EHS_DTL_PLAN_MANAGE_SN
+                     , SUBSTR(EHPL.PLAN_DT, 0,4) AS DSCP_YEAR
+                     , NVL(CDDI.CRISIS_CTMS_EVAL_SYNTH_SCOR, 0) AS TOTAL_SOCR
+                     , EHPL.EHS_DTL_PLAN_MANAGE_NM
+                     , EHPL.CHRG_DEPT_CD
+                     , FN_ZZ_GET_DEPT_NM(CHRG_DEPT_CD) CHRG_DEPT_NM
+                     , EHPL.PLAN_DT
+                     , EHPL.DSCP_TYP_CD
+                     , CDCI.DSCP_TYP_NM
+                     , CASE WHEN CDIP.EHS_PLAN_MANAGE_SN IS NOT NULL AND CDIP.EHS_DTL_PLAN_MANAGE_SN IS NOT NULL 
+                                  AND (CDBS.MNTG_RSLT_CNTE IS NOT NULL OR CDBS.SYNTH_OPIN IS NOT NULL OR CDBS.RMRK1 IS NOT NULL OR CDBS.RMRK2 IS NOT NULL) THEN 'Y'ELSE 'N' END DSCP_IMPV_YN
+                     , CDSC.MANAGE_DEPT_CD
+                     , FN_ZZ_GET_DEPT_NM(CDSC.MANAGE_DEPT_CD) MANAGE_DEPT_NM
+                     , CDSC.MANAGE_UNIT_CD
+                     , FN_ZZ_GET_DEPT_NM(CDSC.MANAGE_UNIT_CD) MANAGE_UNIT_NM
+                     , CDDI.ONST_EMRCY_TKACT_HANDL_STAT_CD
+                     , FN_EH_CDNM('F110', CDDI.ONST_EMRCY_TKACT_HANDL_STAT_CD) AS ONST_EMRCY_TKACT_HANDL_STAT_NM
+                     , CDDI.NEED_TOOL_CNVY_HANDL_STAT_CD
+                     , FN_EH_CDNM('F120', CDDI.NEED_TOOL_CNVY_HANDL_STAT_CD) AS NEED_TOOL_CNVY_HANDL_STAT_NM
+                     , CDDI.HARM_RGN_EMRCY_HANDL_STAT_CD
+                     , FN_EH_CDNM('F130', CDDI.HARM_RGN_EMRCY_HANDL_STAT_CD) AS HARM_RGN_EMRCY_HANDL_STAT_NM
+                     , CDDI.ONST_ARNG_HANDL_STAT_CD
+                     , FN_EH_CDNM('F140', CDDI.ONST_ARNG_HANDL_STAT_CD) AS ONST_ARNG_HANDL_STAT_NM
+                     
+                FROM EHEPDEHPL EHPL, EHCHMCDBS CDBS, EHCHRCDIP CDIP, EHCHRCDDI CDDI, EHCHDCDSC CDSC, EHEBMBHVR BHVR, EHEBMCDSC EHEB,  EHEBMCDCI CDCI
+                WHERE EHPL.EHS_PLAN_MANAGE_SN = CDBS.EHS_PLAN_MANAGE_SN(+)
+                  AND EHPL.EHS_DTL_PLAN_MANAGE_SN = CDBS.EHS_DTL_PLAN_MANAGE_SN(+)
+                  AND CDBS.EHS_PLAN_MANAGE_SN = CDIP.EHS_PLAN_MANAGE_SN(+)
+                  AND CDBS.EHS_DTL_PLAN_MANAGE_SN = CDIP.EHS_DTL_PLAN_MANAGE_SN(+)
+                  AND CDBS.EHS_PLAN_MANAGE_SN = CDDI.EHS_PLAN_MANAGE_SN
+                  AND CDBS.EHS_DTL_PLAN_MANAGE_SN = CDDI.EHS_DTL_PLAN_MANAGE_SN
+                  AND CDBS.EHS_PLAN_MANAGE_SN = CDSC.EHS_PLAN_MANAGE_SN
+                  AND CDBS.EHS_DTL_PLAN_MANAGE_SN = CDSC.EHS_DTL_PLAN_MANAGE_SN
+                  AND CDSC.CIRCUM_BHVR_KNACK_SN = BHVR.CIRCUM_BHVR_KNACK_SN
+                  AND BHVR.DSCP_TYP_CD = EHEB.DSCP_TYP_CD
+                  AND BHVR.SCEN_CIRCUM_CD = EHEB.SCEN_CIRCUM_CD
+                  AND EHEB.DSCP_TYP_CD = CDCI.DSCP_TYP_CD
+                  AND EHPL.DSCP_TYP_CD = CDCI.DSCP_TYP_CD
+                  AND EHPL.EHS_MANAGE_CLAUSENO = '00007'
+                  
+
+                 GROUP BY EHPL.EHS_PLAN_MANAGE_SN
+                     , EHPL.EHS_DTL_PLAN_MANAGE_SN
+                     , EHPL.EHS_DTL_PLAN_MANAGE_NM
+                     , EHPL.CHRG_DEPT_CD
+                     , CDIP.EHS_PLAN_MANAGE_SN
+                     , CDIP.EHS_DTL_PLAN_MANAGE_SN
+                     , CDBS.MNTG_RSLT_CNTE 
+                     , CDBS.SYNTH_OPIN 
+                     , CDBS.RMRK1 
+                     , CDBS.RMRK2
+                     , CDCI.DSCP_TYP_NM
+                     , CDDI.CRISIS_CTMS_EVAL_SYNTH_SCOR
+                     , EHPL.PLAN_DT
+                     , EHPL.DSCP_TYP_CD
+                     , CDSC.MANAGE_DEPT_CD
+                     , CDSC.MANAGE_UNIT_CD
+                     , CDDI.ONST_EMRCY_TKACT_HANDL_STAT_CD
+                     , CDDI.NEED_TOOL_CNVY_HANDL_STAT_CD
+                     , CDDI.HARM_RGN_EMRCY_HANDL_STAT_CD
+                     , CDDI.ONST_ARNG_HANDL_STAT_CD
+                     
+                ) FIR, (
+                    SELECT DSCP_YEAR
+                         , DSCP_TYP_CD
+                         , MANAGE_DEPT_CD
+                         , MANAGE_UNIT_CD
+                         , NVL(SUM(S_SUM), 0) AS S_SUM
+                         , NVL(SUM(S_SUM) /  COUNT(0), 0) AS AVR_TOTAL_SOCR
+                         , COUNT(0) AS CNT
+                     FROM (
+                            SELECT EHPL.EHS_PLAN_MANAGE_SN
+                                 , EHPL.EHS_DTL_PLAN_MANAGE_SN
+                                 , SUBSTR(EHPL.PLAN_DT, 0,4) AS DSCP_YEAR
+                                 , EHPL.DSCP_TYP_CD
+                                 , CDSC.MANAGE_DEPT_CD
+                                 , CDSC.MANAGE_UNIT_CD
+                                 , CDDI.CRISIS_CTMS_EVAL_SYNTH_SCOR AS S_SUM
+                              FROM EHEPDEHPL EHPL -- 세부계획
+                                 , EHCHRCDDI CDDI -- 훈련결과
+                                 , (
+                                    SELECT EHS_PLAN_MANAGE_SN
+                                         , EHS_DTL_PLAN_MANAGE_SN
+                                         , MANAGE_DEPT_CD
+                                         , MANAGE_UNIT_CD
+                                      FROM EHCHDCDSC
+                                     GROUP BY
+                                            EHS_PLAN_MANAGE_SN
+                                          , EHS_DTL_PLAN_MANAGE_SN
+                                          , MANAGE_DEPT_CD
+                                          , MANAGE_UNIT_CD
+                                    ) CDSC -- 위기대응훈련계획
+                                 
+                             WHERE EHPL.EHS_APRVAL_PROGRS_STAT_CD = 'H214'
+                               AND EHPL.EHS_PLAN_MANAGE_SN = CDDI.EHS_PLAN_MANAGE_SN
+                               AND EHPL.EHS_DTL_PLAN_MANAGE_SN = CDDI.EHS_DTL_PLAN_MANAGE_SN
+                               AND EHPL.EHS_PLAN_MANAGE_SN = CDSC.EHS_PLAN_MANAGE_SN
+                               AND EHPL.EHS_DTL_PLAN_MANAGE_SN = CDSC.EHS_DTL_PLAN_MANAGE_SN
+                               
+                          )
+                    GROUP BY
+                           DSCP_YEAR
+                         , DSCP_TYP_CD
+                         , MANAGE_DEPT_CD
+                         , MANAGE_UNIT_CD
+                       )SND]]>
+        WHERE FIR.DSCP_YEAR  = SND.DSCP_YEAR
+          AND FIR.DSCP_TYP_CD = SND.DSCP_TYP_CD
+          AND FIR.MANAGE_DEPT_CD = SND.MANAGE_DEPT_CD
+          AND FIR.MANAGE_UNIT_CD = SND.MANAGE_UNIT_CD
+          <if test="searchPlanStDt != null and searchPlanStDt != ''">
+            <![CDATA[	AND FIR.PLAN_DT >= #{searchPlanStDt}	]]>
+          </if>
+          <if test="searchPlanEndDt != null and searchPlanEndDt != ''">
+            <![CDATA[	AND FIR.PLAN_DT	<= #{searchPlanEndDt}	]]>
+          </if>
+          <if test="searchDscpTypCd != null and searchDscpTypCd != ''">
+              AND FIR.DSCP_TYP_CD    = #{searchDscpTypCd}
+          </if>
+          <if test="searchDeptCd != null and searchDeptCd != ''">
+                AND FIR.MANAGE_DEPT_CD    = #{searchDeptCd}
+          </if>
+          <if test="searchUnitCd != null and searchUnitCd != ''">
+                AND FIR.MANAGE_UNIT_CD    = #{searchUnitCd}
+          </if>
+          <if test="searchChrgDeptCd != null and searchChrgDeptCd != ''">
+                AND FIR.CHRG_DEPT_CD      = #{searchChrgDeptCd}
+          </if>
+          <if test="searchTotalScor != null and searchTotalScor != ''">
+                <![CDATA[AND FIR.TOTAL_SOCR < #{searchTotalScor}]]> 
+          </if>
+          <if test="ehsDtlPlanManageNm != null and ehsDtlPlanManageNm != ''">
+              AND FIR.EHS_DTL_PLAN_MANAGE_NM LIKE '%' || #{ehsDtlPlanManageNm} || '%'
+          </if>
+          <if test="searchOnstEmrcy != null and searchOnstEmrcy != ''">
+              AND FIR.ONST_EMRCY_TKACT_HANDL_STAT_CD = #{searchOnstEmrcy}
+          </if>
+          <if test="searchNeedTool != null and searchNeedTool != ''">
+              AND FIR.NEED_TOOL_CNVY_HANDL_STAT_CD = #{searchNeedTool}
+          </if>
+          <if test="searchHarmRgn != null and searchHarmRgn != ''">
+              AND FIR.HARM_RGN_EMRCY_HANDL_STAT_CD = #{searchHarmRgn}
+          </if>
+          <if test="searchOnstArng != null and searchOnstArng != ''">
+              AND FIR.ONST_ARNG_HANDL_STAT_CD = #{searchOnstArng}
+          </if>
+        ORDER BY  FIR.DSCP_TYP_CD, FIR.DSCP_YEAR DESC, FIR.PLAN_DT DESC
+    </select>
+</mapper>

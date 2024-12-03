@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.amc.amis.ca.eh.ch.store.mapper.CrisisCtmsDscpBasicMapper">
+
+    <!-- 위기대응훈련 미비 개선사항 훈련평가 조회 -->
+    <select id="retrieveCrisisCtmsDscpBasicList" parameterType="kr.amc.amis.ca.eh.ch.entity.CrisisCtmsDscpBasicDTO" resultType="kr.amc.amis.ca.eh.ch.entity.CrisisCtmsDscpBasicDTO">
+        <![CDATA[
+            SELECT /* SQLID=kr.amc.amis.ca.eh.ch.store.mapper.CrisisCtmsDscpBasicMapper.retrieveCrisisCtmsDscpBasicList */
+                   HBS.EHS_PLAN_MANAGE_SN
+			     , HBS.EHS_DTL_PLAN_MANAGE_SN
+			     , HBS.MNTG_RSLT_CNTE
+			     , HBS.SYNTH_OPIN
+			     , HBS.RMRK1
+			     , HBS.RMRK2
+			     , HBS.RMRK3
+			     , MUSE.REAL_WORK_DEPT_NM AS FRST_ENTR_DEPT_NM
+                 , MUSE.REAL_WORK_UNIT_NM AS FRST_ENTR_UNIT_NM
+			     , DECODE(HBS.FRST_ENTR_EMPNO, NULL, '', FN_ZZ_GET_USER_NM(HBS.FRST_ENTR_EMPNO) || '(' || HBS.FRST_ENTR_EMPNO || ')') AS FRST_ENTR_EMPNO
+			     , HBS.FRST_ENTR_DTM
+			     , DECODE(HBS.FRST_ENTR_EMPNO, NULL, '', FN_ZZ_GET_USER_NM(HBS.FRST_ENTR_EMPNO) || '(' || HBS.FRST_ENTR_EMPNO || ')') AS FINL_UPID_EMPNO
+			     , HBS.FINL_UPDT_DTM
+			  FROM EHCHMCDBS HBS, V_ZZANMUSER MUSE
+        ]]>
+        <where>
+        	AND HBS.FRST_ENTR_EMPNO = MUSE.USR_ID
+            <if test="ehsPlanManageSn != null and ehsPlanManageSn &gt; 0">
+                AND HBS.EHS_PLAN_MANAGE_SN     = #{ehsPlanManageSn}
+            </if>
+            <if test="ehsDtlPlanManageSn != null and ehsDtlPlanManageSn &gt; 0">
+                AND HBS.EHS_DTL_PLAN_MANAGE_SN = #{ehsDtlPlanManageSn}
+            </if>
+	    </where>
+    </select>
+
+</mapper>

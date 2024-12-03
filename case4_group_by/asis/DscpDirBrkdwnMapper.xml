@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.amc.amis.ca.eh.ch.store.mapper.DscpDirBrkdwnMapper">
+    
+    <!-- 위기대응통계분석 실적조회 -->
+    <select id="retrieveCrisisCtmsDscpTypByAcrs" parameterType="kr.amc.amis.ca.eh.ch.entity.CrisisCtmsDscpStatAnlyDTO" resultType="kr.amc.amis.ca.eh.ch.entity.CrisisCtmsDscpStatAnlyDTO">
+        <![CDATA[
+        SELECT /* SQLID=kr.amc.amis.ca.eh.ch.store.mapper.DscpDirBrkdwnMapper.retrieveCrisisCtmsDscpSmryStatAnly */
+               NVL(SUM(CDDI.CRISIS_CTMS_EVAL_SYNTH_SCOR) /  COUNT(0), 0) AS AVG_TOTAL_SCOR
+             , COUNT(DECODE(CDDI.ONST_EMRCY_TKACT_HANDL_STAT_CD, 'F111', 1)) AS ONST_EMR_SCOR1
+             , COUNT(DECODE(CDDI.ONST_EMRCY_TKACT_HANDL_STAT_CD, 'F112', 1)) AS ONST_EMR_SCOR2
+             , COUNT(DECODE(CDDI.ONST_EMRCY_TKACT_HANDL_STAT_CD, 'F113', 1)) AS ONST_EMR_SCOR3
+             , COUNT(DECODE(CDDI.ONST_EMRCY_TKACT_HANDL_STAT_CD, NULL, 1)) AS ONST_EMR_SCOR4
+             , COUNT(DECODE(CDDI.NEED_TOOL_CNVY_HANDL_STAT_CD, 'F121', 1)) AS NEED_TOOL_SCOR1
+             , COUNT(DECODE(CDDI.NEED_TOOL_CNVY_HANDL_STAT_CD, 'F122', 1)) AS NEED_TOOL_SCOR2
+             , COUNT(DECODE(CDDI.NEED_TOOL_CNVY_HANDL_STAT_CD, 'F123', 1)) AS NEED_TOOL_SCOR3
+             , COUNT(DECODE(CDDI.NEED_TOOL_CNVY_HANDL_STAT_CD, NULL, 1)) AS NEED_TOOL_SCOR4
+             , COUNT(DECODE(CDDI.HARM_RGN_EMRCY_HANDL_STAT_CD, 'F131', 1)) AS SCD_HARM_SCOR1
+             , COUNT(DECODE(CDDI.HARM_RGN_EMRCY_HANDL_STAT_CD, 'F132', 1)) AS SCD_HARM_SCOR2
+             , COUNT(DECODE(CDDI.HARM_RGN_EMRCY_HANDL_STAT_CD, 'F133', 1)) AS SCD_HARM_SCOR3
+             , COUNT(DECODE(CDDI.HARM_RGN_EMRCY_HANDL_STAT_CD, NULL, 1)) AS SCD_HARM_SCOR4
+             , COUNT(DECODE(CDDI.ONST_ARNG_HANDL_STAT_CD, 'F141', 1)) AS ONST_ARNG_SCOR1
+             , COUNT(DECODE(CDDI.ONST_ARNG_HANDL_STAT_CD, 'F142', 1)) AS ONST_ARNG_SCOR2
+             , COUNT(DECODE(CDDI.ONST_ARNG_HANDL_STAT_CD, 'F143', 1)) AS ONST_ARNG_SCOR3
+             , COUNT(DECODE(CDDI.ONST_ARNG_HANDL_STAT_CD, NULL, 1)) AS ONST_ARNG_SCOR4
+             , COUNT(DECODE(CASE WHEN CDDI.CRISIS_CTMS_EVAL_SYNTH_SCOR >= 90 THEN 1 ELSE 0 END, 1, 1)) DSCP_SYNTH_SCOR1
+             , COUNT(DECODE(CASE WHEN CDDI.CRISIS_CTMS_EVAL_SYNTH_SCOR >= 70 AND CDDI.CRISIS_CTMS_EVAL_SYNTH_SCOR < 90 THEN 1 ELSE 0 END, 1, 1)) DSCP_SYNTH_SCOR2
+             , COUNT(DECODE(CASE WHEN CDDI.CRISIS_CTMS_EVAL_SYNTH_SCOR >= 50 AND CDDI.CRISIS_CTMS_EVAL_SYNTH_SCOR < 70 THEN 1 ELSE 0 END, 1, 1)) DSCP_SYNTH_SCOR3
+             , COUNT(DECODE(CASE WHEN CDDI.CRISIS_CTMS_EVAL_SYNTH_SCOR <= 49 THEN 1 ELSE 0 END, 1, 1)) DSCP_SYNTH_SCOR4
+             , EPDL.PLAN_REG_CNT
+             , COUNT(CDDI.FRST_ENTR_EMPNO) DSCP_DIR_CNT
+             , NVL((COUNT(CDDI.FRST_ENTR_EMPNO) /  EPDL.PLAN_REG_CNT)*100,0) AS PLAN_PREP_ACRS_PER
+          FROM EHEPDEHPL EHPL -- 세부계획
+             , EHCHMCDBS CDBS -- 훈련평가기본
+             , EHCHRCDDI CDDI -- 훈련결과
+             , ( SELECT COUNT(*) AS PLAN_REG_CNT
+                   FROM EHEPDEHPL EHEP
+        ]]>
+                <where>
+                    AND EHEP.EHS_MANAGE_CLAUSENO = '00007'
+                    <if test="dscpTypCd != null and dscpTypCd != ''">
+                        AND EHEP.DSCP_TYP_CD = #{dscpTypCd}
+                    </if>
+                    <if test="searchPlanStDt != null and searchPlanStDt != ''">
+                        <![CDATA[   AND EHEP.PLAN_DT >= #{searchPlanStDt}  ]]>
+                    </if>
+                    <if test="searchPlanEndDt != null and searchPlanEndDt != ''">
+                        <![CDATA[   AND EHEP.PLAN_DT   <= #{searchPlanEndDt}   ]]>
+                    </if>
+                </where>
+        <![CDATA[
+               ) EPDL
+        ]]>          
+         WHERE EHPL.EHS_PLAN_MANAGE_SN = CDBS.EHS_PLAN_MANAGE_SN
+           AND EHPL.EHS_DTL_PLAN_MANAGE_SN = CDBS.EHS_DTL_PLAN_MANAGE_SN
+           AND CDBS.EHS_PLAN_MANAGE_SN = CDDI.EHS_PLAN_MANAGE_SN
+           AND CDBS.EHS_DTL_PLAN_MANAGE_SN = CDDI.EHS_DTL_PLAN_MANAGE_SN
+           <if test="searchPlanStDt != null and searchPlanStDt != ''">
+            <![CDATA[   AND EHPL.PLAN_DT >= #{searchPlanStDt}  ]]>
+           </if>
+           <if test="searchPlanEndDt != null and searchPlanEndDt != ''">
+            <![CDATA[   AND EHPL.PLAN_DT   <= #{searchPlanEndDt}   ]]>
+           </if>
+           <if test="dscpTypCd != null and dscpTypCd != ''">
+            AND EHPL.DSCP_TYP_CD = #{dscpTypCd}
+           </if>
+           GROUP BY EPDL.PLAN_REG_CNT
+    </select>
+</mapper>

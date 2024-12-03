@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.amc.amis.ca.eh.eb.store.mapper.CrisisCtmsScenCircumBasicMapper">
+
+    <!-- 위기대응훈련 시나리오상황 등록 -->
+    <insert id="registerCrisisCtmsScenCircumBasic" parameterType="kr.amc.amis.ca.eh.eb.entity.CrisisCtmsScenCircumBasicDTO">
+        <selectKey keyProperty="scenCircumCd" order="BEFORE" resultType="java.lang.String">
+            SELECT TRIM(TO_CHAR(NVL(MAX(CDSC.SCEN_CIRCUM_CD),0) + 1,'000'))
+              FROM EHEBMCDSC CDSC
+             WHERE CDSC.DSCP_TYP_CD = #{dscpTypCd}
+         </selectKey>
+        <![CDATA[
+            INSERT /* SQLID=kr.amc.amis.ca.eh.eb.store.mapper.CrisisCtmsScenCircumBasicMapper.registerCrisisCtmsScenCircumBasic */
+              INTO EHEBMCDSC
+            (
+              SCEN_CIRCUM_CD, DSCP_TYP_CD, SCEN_NM, SORT_SEQ, USE_YN, FRST_ENTR_EMPNO, FRST_ENTR_DTM
+            , FINL_UPID_EMPNO, FINL_UPDT_DTM
+            )
+            VALUES
+            (
+              #{scenCircumCd, jdbcType=VARCHAR}, #{dscpTypCd, jdbcType=VARCHAR}, #{scenNm, jdbcType=VARCHAR}, #{sortSeq}, #{useYn}, #{frstEntrEmpno}, SYSDATE
+            , #{finlUpidEmpno}, SYSDATE
+            )
+        ]]>
+    </insert>
+
+</mapper>

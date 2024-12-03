@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.amc.amis.ca.eh.ch.store.mapper.DscpEvalQuestBasicMapper">
+
+    <select id="retrieveDscpEvalQuestBasic" parameterType="kr.amc.amis.ca.eh.ch.entity.DscpEvalQuestBasicDTO" resultType="kr.amc.amis.ca.eh.ch.entity.DscpEvalQuestBasicDTO">
+        <![CDATA[
+            SELECT /* SQLID=kr.amc.amis.ca.eh.ch.store.mapper.DscpEvalQuestBasicMapper.retrieveDscpEvalQuestBasic */
+                   HEQ.DSCP_EVAL_QUEST_SN
+			     , HEQ.DSCP_EVAL_QUEST_CLAU_CD
+			     , HEQ.DSCP_TYP_CD
+			     , HEQ.DSCP_EVAL_QUEST_CNTE
+			     , NVL(HEQ.DOM_ST_SECT_SCOR, 0) DOM_ST_SECT_SCOR
+			     , NVL(HEQ.DOM_END_SECT_SCOR, 0) DOM_END_SECT_SCOR
+                 , HEQ.SORT_SEQ
+			  FROM EHCHMCDEQ HEQ
+        ]]>
+        <where>
+        		<if test="dscpTypCd != null and dscpTypCd != ''">
+        			AND HEQ.DSCP_TYP_CD             = #{dscpTypCd}
+        		</if>
+			    <if test="dscpEvalQuestSn != null and dscpEvalQuestSn &gt; 0">
+	                AND HEQ.DSCP_EVAL_QUEST_SN      = #{dscpEvalQuestSn}
+	            </if>
+			    <if test="dscpEvalQuestClauCd != null and dscpEvalQuestClauCd != ''">
+	                AND HEQ.DSCP_EVAL_QUEST_CLAU_CD = #{dscpEvalQuestClauCd}
+	            </if>
+	    </where>
+             ORDER BY SORT_SEQ, DSCP_EVAL_QUEST_SN
+    </select>
+
+</mapper>

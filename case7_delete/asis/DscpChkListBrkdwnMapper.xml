@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.amc.amis.ca.eh.ch.store.mapper.DscpChkListBrkdwnMapper">
+
+    <!-- 위기대응훈련 체크리스트 삭제 -->
+    <delete id="deleteDscpChkListBrkdwn" parameterType="kr.amc.amis.ca.eh.ch.entity.DscpChkListBrkdwnDTO">
+        <![CDATA[
+            DELETE /* SQLID=kr.amc.amis.ca.eh.ch.store.mapper.DscpChkListBrkdwnMapper.deleteDscpChkListBrkdwn */
+              FROM EHCHRCDCL HCL
+			 WHERE HCL.EHS_PLAN_MANAGE_SN     = #{ehsPlanManageSn, jdbcType=VARCHAR}
+			   AND HCL.EHS_DTL_PLAN_MANAGE_SN = #{ehsDtlPlanManageSn, jdbcType=VARCHAR}
+			   AND HCL.CIRCUM_BHVR_KNACK_SN   = #{circumBhvrKnackSn, jdbcType=VARCHAR}
+		]]>
+		<if test="sn != null and sn !=''">
+			<![CDATA[AND HCL.SN                     = #{sn, jdbcType=VARCHAR} ]]>
+		</if>
+    </delete>
+
+</mapper>

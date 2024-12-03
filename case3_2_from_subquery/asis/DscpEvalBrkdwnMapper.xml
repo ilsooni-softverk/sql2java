@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.amc.amis.ca.eh.ch.store.mapper.DscpEvalBrkdwnMapper">
+
+	<!-- 훈련평가상세내역조회 -->
+    <select id="retrieveDscpEvalDtlBrkdwn" parameterType="kr.amc.amis.ca.eh.ch.entity.DscpEvalBrkdwnDTO" resultType="kr.amc.amis.ca.eh.ch.entity.DscpEvalBrkdwnDTO">
+        <![CDATA[
+           SELECT /* SQLID=kr.amc.amis.ca.eh.ch.store.mapper.DscpEvalBrkdwnMapper.retrieveDscpEvalDtlBrkdwn */
+                  CDEQ.DSCP_EVAL_QUEST_SN
+			    , CDEQ.DSCP_EVAL_QUEST_CLAU_CD
+			    , FN_ZZ_GET_CD_NM('EH0054',CDEQ.DSCP_EVAL_QUEST_CLAU_CD) AS DSCP_EVAL_QUEST_CLAU_NM
+			    , CDEQ.DSCP_TYP_CD
+			    , CDEQ.DOM_ST_SECT_SCOR
+			    , CDEQ.DOM_END_SECT_SCOR
+			    , CDEQ.DOM_ST_SECT_SCOR || ' ~ ' || CDEQ.DOM_END_SECT_SCOR AS DOM_SECT_CNTE
+			    , CDEQ.DSCP_EVAL_QUEST_CNTE
+			    , SUB.EHS_PLAN_MANAGE_SN
+			    , SUB.EHS_DTL_PLAN_MANAGE_SN
+			    , NVL(SUB.EVAL_SCOR1, 0) EVAL_SCOR1
+			    , SUB.FRST_ENTR_DEPT_NM
+			    , SUB.FRST_ENTR_UNIT_NM
+			    , SUB.FRST_ENTR_EMPNO
+			    , SUB.FRST_ENTR_DTM
+			    , SUB.FINL_UPID_EMPNO
+			    , SUB.FINL_UPDT_DTM
+			 FROM EHCHMCDEQ CDEQ, (
+			  					  SELECT HEV.EHS_PLAN_MANAGE_SN
+			                           , HEV.EHS_DTL_PLAN_MANAGE_SN
+			                           , HEQ.DSCP_EVAL_QUEST_SN
+			                           , HEQ.DSCP_EVAL_QUEST_CLAU_CD
+			                           , FN_ZZ_GET_CD_NM('EH0054',HEQ.DSCP_EVAL_QUEST_CLAU_CD) AS DSCP_EVAL_QUEST_CLAU_NM
+			                           , HEQ.DSCP_TYP_CD
+			                           , HEQ.DOM_ST_SECT_SCOR || ' ~ ' || HEQ.DOM_END_SECT_SCOR AS DOM_SECT_CNTE
+			                           , HEQ.DSCP_EVAL_QUEST_CNTE
+			                           , NVL(HEV.EVAL_SCOR1, 0) AS EVAL_SCOR1
+			                           , MUSR.REAL_WORK_DEPT_NM AS FRST_ENTR_DEPT_NM
+			                           , MUSR.REAL_WORK_UNIT_NM AS FRST_ENTR_UNIT_NM
+			                           , DECODE(HEV.FRST_ENTR_EMPNO, NULL, '', FN_ZZ_GET_USER_NM(HEV.FRST_ENTR_EMPNO) || '(' || HEV.FRST_ENTR_EMPNO || ')') AS FRST_ENTR_EMPNO
+			                           , HEV.FRST_ENTR_DTM
+			                           , DECODE(HEV.FINL_UPID_EMPNO, NULL, '', FN_ZZ_GET_USER_NM(HEV.FINL_UPID_EMPNO) || '(' || HEV.FINL_UPID_EMPNO || ')') AS FINL_UPID_EMPNO
+			                           , HEV.FINL_UPDT_DTM
+			                   		FROM EHCHRCDEV HEV /* 훈련평가내역 */
+			                   		   , EHCHMCDEQ HEQ /* 훈련평가문항기본 */
+			                   		   , V_ZZANMUSER MUSR
+			                   	   WHERE HEQ.DSCP_EVAL_QUEST_SN = HEV.DSCP_EVAL_QUEST_SN(+)
+			                         AND HEV.FRST_ENTR_EMPNO = MUSR.USR_ID
+			                         AND HEQ.DSCP_TYP_CD = #{dscpTypCd}
+		                             AND HEV.EHS_PLAN_MANAGE_SN     = #{ehsPlanManageSn}
+		                             AND HEV.EHS_DTL_PLAN_MANAGE_SN  = #{ehsDtlPlanManageSn}]]>
+		                             <if test="dscpEvalQuestSn != null and dscpEvalQuestSn &gt; 0">
+						                AND HEV.DSCP_EVAL_QUEST_SN     = #{dscpEvalQuestSn}
+						            </if>
+						            <![CDATA[
+		                             ) SUB
+        ]]>
+            WHERE CDEQ.DSCP_EVAL_QUEST_SN = SUB.DSCP_EVAL_QUEST_SN(+)
+              AND CDEQ.DSCP_TYP_CD = #{dscpTypCd}
+	        ORDER BY CDEQ.SORT_SEQ,  CDEQ.DSCP_EVAL_QUEST_SN
+    </select>
+
+</mapper>
